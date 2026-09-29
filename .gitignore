@@ -28,3 +28,6 @@ web/.vite/
 # 编辑器
 .idea/
 .vscode/
+
+# pnpm 本地缓存
+.pnpm-store/
