@@ -33,6 +33,14 @@ pnpm test && pnpm typecheck && pnpm build
 
 `web/public/data/` 里已带有 2026 年度的构建结果,不跑管线也可以直接 `pnpm dev` 看效果。
 
+## 在线访问
+
+推送到 `main` 后,GitHub Actions(`.github/workflows/pages.yml`)会自动构建 `web/` 并发布到 GitHub Pages:
+
+https://dggrok.github.io/job-matching/
+
+仓库需要是公开的,并且在 Settings → Pages 里把 Source 设为 GitHub Actions。本地 `pnpm dev` / `pnpm build` 不受影响,只有在 Actions 里构建时才会加上 `/job-matching/` 前缀。
+
 ## 使用方式
 
 1. 打开「我的条件」,填写最高学历、专业、应届状态、出生年月、政治面貌等。信息只保存在本机浏览器。
