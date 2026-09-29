@@ -1,0 +1,30 @@
+# 系统文件
+.DS_Store
+
+# 原始职位表(体积大且来自官方,由人工下载,不入库),仅保留占位文件
+data-pipeline/raw/*
+!data-pipeline/raw/.gitkeep
+
+# 每次构建生成的解析报告
+data-pipeline/reports/
+
+# Python 环境与缓存
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 前端依赖与构建产物
+node_modules/
+web/dist/
+web/.vite/
+
+# 日志与本地环境变量
+*.log
+.env
+.env.*
+
+# 编辑器
+.idea/
+.vscode/

@@ -1,0 +1,60 @@
+# 考试元信息与「公告级规则」。
+#
+# 每年公告发布后,必须核对公告原文(一、报考条件),更新对应年度的 ageRule 等字段。
+# 公告级规则不在职位表里,是所有职位共用的条件。
+#
+# ageRule 的计算约定(与国考公告的写法一致,以公告原文为准):
+#   "38周岁以下(1986年10月至2007年10月期间出生)":报名年份为 Y、月份为 M 时,
+#   最早出生年月 = (Y - maxAge - 1 年, M 月),最晚出生年月 = (Y - minAge 年, M 月)。
+#   例:Y=2025, M=10, maxAge=38 → 最早 1986-10;minAge=18 → 最晚 2007-10。
+
+guokao-2026:
+  name: 中央机关及其直属机构2026年度考试录用公务员
+  type: guokao
+  year: 2026                  # 年度(应届毕业生届别)
+  graduateYear: 2026          # 应届毕业生届别
+  file: raw/guokao-2026.xls
+  publishedAt: 2025-10-14
+  signup: 2025-10-15 至 2025-10-24
+  writtenExam: 2025-11-29 至 2025-11-30
+  source: http://bm.scs.gov.cn/kl2026
+  sample: true                # 开发样本(第三方镜像的官方表),上线数据应替换为最新一年
+  official:                   # 官方公告披露的总数,构建时用来校验
+    positions: 20714
+    headcount: 38119
+  ageRule:
+    refYear: 2025             # 公告与报名所在年份
+    refMonth: 10
+    minAge: 18
+    maxAge: 38                # 一般报考者
+    maxAgeFreshPg: 43         # 应届硕士、博士研究生
+    policeMaxAge: 30          # 市(地)级及以下公安机关人民警察职位
+    policeMaxAgeFreshPg: 35
+    note: 公告:年龄一般为18周岁以上、38周岁以下(1986年10月至2007年10月期间出生);2026年应届硕士、博士研究生放宽到43周岁以下(1981年10月以后出生)。市(地)级及以下公安机关人民警察职位一般为30周岁以下(1994年10月以后出生),应届硕博和法医职位放宽到35周岁以下(1989年10月以后出生)。
+
+# 2027 年度:预计 2026-10-14 发布,发布后取得职位表放入 raw/guokao-2027.xls,
+# 再按公告核对以下所有字段(尤其是 ageRule、official、signup、writtenExam),然后取消 pending。
+guokao-2027:
+  name: 中央机关及其直属机构2027年度考试录用公务员
+  type: guokao
+  year: 2027
+  graduateYear: 2027
+  file: raw/guokao-2027.xls
+  publishedAt: null
+  signup: null
+  writtenExam: null
+  source: http://bm.scs.gov.cn/kl2027
+  pending: true               # 尚未发布,构建时跳过
+  official:
+    positions: null
+    headcount: null
+  ageRule:
+    # 以下为占位,沿用 2026 年度口径,公告发布后必须核对修改
+    refYear: 2026
+    refMonth: 10
+    minAge: 18
+    maxAge: 38
+    maxAgeFreshPg: 43
+    policeMaxAge: 30
+    policeMaxAgeFreshPg: 35
+    note: 占位,沿用2026年度口径,请以2027年度公告为准。

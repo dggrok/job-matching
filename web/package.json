@@ -1,0 +1,28 @@
+{
+  "name": "job-matching-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource/noto-serif-sc": "^5.3.0",
+    "element-plus": "^2.14.6",
+    "pinia": "^4.0.3",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "typescript": "^5.9.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2",
+    "vue-tsc": "^3.3.11"
+  }
+}
