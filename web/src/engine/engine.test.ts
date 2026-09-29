@@ -121,6 +121,31 @@ describeIf('匹配引擎(手工用例)', () => {
     expect(res.status).toBe('ok')
   })
 
+  it('尚未填写的个人信息一律待确认,不会误判为符合或不符合', () => {
+    const blank: Profile = {
+      highestEdu: '',
+      hasDegree: null,
+      ugMajorId: null,
+      pgMajorId: null,
+      freshStatus: 'unknown',
+      birth: '',
+      gender: '',
+      political: 'unknown',
+      grassrootsYears: 0,
+      projects: [],
+      cet: 'unknown',
+      hasAltEnglishCert: false,
+      legalQualification: false,
+      originProvince: '',
+    }
+    const res = matchPosition(pos({ political: 'party', rr: { freshOnly: true } }), ctxFor(blank, eeClass))
+    expect(res.status).toBe('maybe')
+    expect(res.reasons.some((r) => r.level === 'fail')).toBe(false)
+    for (const field of ['学历', '学位', '政治面貌', '应届/往届', '年龄', '专业']) {
+      expect(res.reasons.find((r) => r.field === field)?.level, field).toBe('warn')
+    }
+  })
+
   it('学历:仅限硕士,本科不符合', () => {
     const res = matchPosition(pos({ edu: ['硕士'], eduText: '仅限硕士研究生' }), ctxFor(me, eeClass))
     expect(res.status).toBe('no')

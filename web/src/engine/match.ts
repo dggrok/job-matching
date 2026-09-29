@@ -52,6 +52,8 @@ export function matchPosition(pos: Position, ctx: MatchContext): MatchResult {
   // ---- 学历 ----
   if (pos.edu.length === 0) {
     add('warn', '学历', `学历要求无法识别(${pos.eduText}),请核对`)
+  } else if (!profile.highestEdu) {
+    add('warn', '学历', `要求「${pos.eduText}」,你尚未填写最高学历`)
   } else if (pos.edu.includes(profile.highestEdu)) {
     add('pass', '学历', `要求「${pos.eduText}」,你的最高学历为${profile.highestEdu}`)
   } else {
@@ -68,8 +70,12 @@ export function matchPosition(pos: Position, ctx: MatchContext): MatchResult {
     case 'master':
     case 'doctor': {
       const needRank = { matchHighest: 0, bachelor: 1, master: 2, doctor: 3 }[pos.degree]
-      if (!profile.hasDegree) {
+      if (profile.hasDegree === null) {
+        add('warn', '学位', '要求具有相应学位,你尚未填写是否取得学位')
+      } else if (!profile.hasDegree) {
         add('fail', '学位', '要求具有与最高学历相对应的学位,你尚未取得')
+      } else if (pos.degree !== 'matchHighest' && !profile.highestEdu) {
+        add('warn', '学位', '学位有层次要求,你尚未填写最高学历,无法判断')
       } else if (pos.degree !== 'matchHighest' && eduRank(profile.highestEdu) < needRank) {
         add('fail', '学位', '学位层次不满足要求')
       } else {
@@ -88,9 +94,11 @@ export function matchPosition(pos: Position, ctx: MatchContext): MatchResult {
     if (profile.political === 'party') add('pass', '政治面貌', '要求中共党员')
     else if (profile.political === 'prospective')
       add('pass', '政治面貌', '要求中共党员,预备党员可报考')
+    else if (profile.political === 'unknown') add('warn', '政治面貌', '要求中共党员,你尚未填写政治面貌')
     else add('fail', '政治面貌', '要求中共党员')
   } else if (pos.political === 'partyOrLeague') {
-    if (profile.political === 'masses') add('fail', '政治面貌', '要求中共党员或共青团员')
+    if (profile.political === 'unknown') add('warn', '政治面貌', '要求中共党员或共青团员,你尚未填写政治面貌')
+    else if (profile.political === 'masses') add('fail', '政治面貌', '要求中共党员或共青团员')
     else add('pass', '政治面貌', '要求中共党员或共青团员')
   } else {
     add('warn', '政治面貌', '政治面貌要求无法识别,请核对')
@@ -197,7 +205,9 @@ function matchFresh(pos: Position, profile: Profile, exam: ExamMeta, add: Add): 
   }
   const year = pos.rr.gradYear
   const label = year ? `限${year}届高校毕业生` : '限应届高校毕业生'
-  if (profile.freshStatus === 'none') {
+  if (profile.freshStatus === 'unknown') {
+    add('warn', '应届/往届', `${label},你尚未填写应届状态`)
+  } else if (profile.freshStatus === 'none') {
     add('fail', '应届/往届', `${label},你不是应届毕业生`)
   } else if (profile.freshStatus === 'reserved') {
     if (year) add('fail', '应届/往届', `${label},往届生不符合`)

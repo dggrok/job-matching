@@ -141,17 +141,18 @@ export interface CatalogFile {
 
 // ---------------- 用户画像 ----------------
 
-export type FreshStatus = 'none' | 'current' | 'reserved'
-export type PoliticalStatus = 'party' | 'prospective' | 'league' | 'masses'
+export type FreshStatus = 'unknown' | 'none' | 'current' | 'reserved'
+export type PoliticalStatus = 'unknown' | 'party' | 'prospective' | 'league' | 'masses'
 export type CetLevel = 'unknown' | 'none' | '4' | '6'
 
 export interface Profile {
-  highestEdu: EduLevel
-  /** 是否已取得(或将取得)与最高学历对应的学位 */
-  hasDegree: boolean
+  /** 空字符串表示用户尚未填写 */
+  highestEdu: EduLevel | ''
+  /** 是否已取得(或将取得)与最高学历对应的学位;null 表示尚未填写 */
+  hasDegree: boolean | null
   ugMajorId: string | null
   pgMajorId: string | null
-  /** 应届状态:none 非应届;current 当年届毕业生;reserved 择业期内未就业的往届生(视同应届) */
+  /** 应届状态:unknown 尚未填写;none 非应届;current 当年届毕业生;reserved 择业期内未就业的往届生(视同应届) */
   freshStatus: FreshStatus
   /** 出生年月 YYYY-MM */
   birth: string

@@ -78,7 +78,10 @@ function goResults() {
           <div class="muted hint">须以已取得的最高学历报考;应届生以即将取得的最高学历报考。</div>
         </el-form-item>
         <el-form-item label="已取得对应学位">
-          <el-switch v-model="p.hasDegree" active-text="已取得或将取得" inactive-text="没有学位" />
+          <el-radio-group v-model="p.hasDegree">
+            <el-radio-button :value="true">已取得或将取得</el-radio-button>
+            <el-radio-button :value="false">没有学位</el-radio-button>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="本科专业">
           <el-cascader
@@ -87,7 +90,7 @@ function goResults() {
             :props="cascaderProps"
             filterable
             clearable
-            placeholder="搜索或选择,如 电子信息工程"
+            placeholder="搜索或选择你的本科专业"
             class="wide"
           />
           <div v-if="store.level === 'UG' && majorNote" class="muted hint">目录注:{{ majorNote }}</div>
