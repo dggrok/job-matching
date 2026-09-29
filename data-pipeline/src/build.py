@@ -21,7 +21,12 @@ import yaml
 from .catalog.index import CatalogIndex
 from .catalog.parse import load_catalogs
 from .importers.base import ImportError_
+from .catalog.jiangsu_ref import load_ref
 from .importers.guokao import GuokaoImporter
+from .importers.jiangsu import JiangsuImporter
+from .importers.zhejiang import ZhejiangImporter
+from .normalize import jiangsu as jiangsu_builder
+from .normalize import zhejiang as zhejiang_builder
 from .normalize.major import MajorParser
 from .normalize.position import MajorTable, build_position
 from .validate import validate
@@ -29,7 +34,13 @@ from .validate import validate
 ROOT = Path(__file__).resolve().parent.parent  # data-pipeline/
 DEFAULT_OUT = ROOT.parent / "web" / "public" / "data"
 
-IMPORTERS = {"guokao": GuokaoImporter}
+# 每种考试类型(exams.yaml 里的 type)对应一个导入器和一个 Position 构建函数
+IMPORTERS = {"guokao": GuokaoImporter, "zhejiang": ZhejiangImporter, "jiangsu": JiangsuImporter}
+BUILDERS = {
+    "guokao": build_position,
+    "zhejiang": zhejiang_builder.build_position,
+    "jiangsu": jiangsu_builder.build_position,
+}
 
 
 def dump(obj: Any, path: Path) -> str:
@@ -63,8 +74,14 @@ def build_exam(exam_id: str, cfg: dict[str, Any], index: CatalogIndex, out: Path
     raw_rows = importer.load(ROOT / cfg["file"])
     sheet_counts = dict(Counter(r["_sheet"] for r in raw_rows))
 
-    majors = MajorTable(MajorParser(index))
-    positions = [build_position(exam_id, cfg, r, majors) for r in raw_rows]
+    parser = MajorParser(index, pg_class_suffix_exact=bool(cfg.get("pgClassSuffixExact")))
+    if cfg["type"] == "jiangsu":
+        # 江苏的专业写法依赖自己的《专业参考目录》
+        majors: MajorTable = jiangsu_builder.JiangsuMajorTable(parser, load_ref(ROOT / cfg["majorRef"]), index)
+    else:
+        majors = MajorTable(parser)
+    build = BUILDERS[cfg["type"]]
+    positions = [build(exam_id, cfg, r, majors) for r in raw_rows]
 
     report = validate(positions, majors, cfg, sheet_counts)
     reports_dir = ROOT / "reports"
@@ -84,7 +101,11 @@ def build_exam(exam_id: str, cfg: dict[str, Any], index: CatalogIndex, out: Path
             print(f"[{exam_id}] 校验失败: {e}", file=sys.stderr)
         raise SystemExit(1)
 
-    data = {"examId": exam_id, "majorRules": majors.rules, "positions": positions}
+    data: dict[str, Any] = {"examId": exam_id, "majorRules": majors.rules}
+    cat_refs = getattr(majors, "cat_refs", None)
+    if cat_refs:
+        data["catRefs"] = cat_refs  # 江苏:专业大类 → 国家目录节点 id 集合
+    data["positions"] = positions
     version = dump(data, out / exam_id / "positions.json")
     print(f"[{exam_id}] 校验通过, 数据版本 {version}")
 
@@ -92,6 +113,8 @@ def build_exam(exam_id: str, cfg: dict[str, Any], index: CatalogIndex, out: Path
         "id": exam_id,
         "name": cfg["name"],
         "type": cfg["type"],
+        "kind": cfg.get("kind", "guokao"),
+        "province": cfg.get("province"),
         "year": cfg["year"],
         "graduateYear": cfg["graduateYear"],
         "publishedAt": cfg.get("publishedAt"),
@@ -103,6 +126,7 @@ def build_exam(exam_id: str, cfg: dict[str, Any], index: CatalogIndex, out: Path
         "positions": report.stats["positions"],
         "headcount": report.stats["headcount"],
         "ageRule": cfg["ageRule"],
+        "notices": cfg.get("notices") or [],
         "dataVersion": version,
         "file": f"{exam_id}/positions.json",
     }
@@ -113,6 +137,8 @@ def pending_entry(exam_id: str, cfg: dict[str, Any]) -> dict[str, Any]:
         "id": exam_id,
         "name": cfg["name"],
         "type": cfg["type"],
+        "kind": cfg.get("kind", "guokao"),
+        "province": cfg.get("province"),
         "year": cfg["year"],
         "graduateYear": cfg["graduateYear"],
         "source": cfg["source"],
@@ -161,7 +187,11 @@ def main() -> None:
     except ImportError_ as e:
         raise SystemExit(f"导入失败: {e}")
 
-    manifest["exams"] = sorted(by_id.values(), key=lambda e: e["id"], reverse=True)
+    # 国考在前,省考按省份分组;同一类里新年度在前(前端默认选中第一个已发布的考试)
+    manifest["exams"] = sorted(
+        by_id.values(),
+        key=lambda e: (e.get("kind") != "guokao", e.get("province") or "", -int(e.get("year", 0))),
+    )
     manifest["generatedAt"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     dump(manifest, manifest_path)
     print(f"已写入 {out}")

@@ -109,8 +109,11 @@ def split_segments(masked: str) -> list[tuple[str, str]]:
 
 
 class MajorParser:
-    def __init__(self, index: CatalogIndex):
+    def __init__(self, index: CatalogIndex, pg_class_suffix_exact: bool = False):
         self.index = index
+        # 浙江等省的职位表把研究生的一级学科也写成「××类」(如 法学类=法学一级学科),
+        # 打开后该写法命中一级学科时视为精确匹配,不再降级为待确认。国考默认关闭(写法不统一)。
+        self.pg_class_suffix_exact = pg_class_suffix_exact
 
     # ---------- 对外入口 ----------
     def parse(self, text: str) -> dict[str, Any]:
@@ -265,8 +268,9 @@ class MajorParser:
             for lv in levels:
                 for node in self.index.find_by_name(lv, nname[:-1]):
                     self._add(refs, node["id"])
-            if refs:
-                partial = True
+                    exact = self.pg_class_suffix_exact and lv == "PG" and node["kind"] == "discipline"
+                    if not exact:
+                        partial = True
         return refs, partial
 
     def _resolve_names(self, text: str, levels: list[str]) -> list[str]:

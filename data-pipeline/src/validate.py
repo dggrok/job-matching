@@ -87,5 +87,10 @@ def validate(
         "genderLimited": sum(1 for p in positions if p["rr"].get("gender")),
         "cetRequired": sum(1 for p in positions if p["rr"].get("cet")),
         "residencyLimited": sum(1 for p in positions if p["rr"].get("residency")),
+        "locationUnknown": sum(1 for p in positions if not p["location"]),
+        "ageSpecial": sum(1 for p in positions if p["rr"].get("ageSpecial")),
+        "perPositionAge": sum(1 for p in positions if p.get("ageMax") or p.get("ageMin")),
+        "withNotes": sum(1 for p in positions if p["rr"].get("notes")),
+        "withIdentity": sum(1 for p in positions if p["rr"].get("identity")),
     }
     return rep

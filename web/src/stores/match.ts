@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { provinceOf, summarize, type Row } from '@/engine/filters'
+import { regionOf, summarize, type Row } from '@/engine/filters'
 import { matchPosition } from '@/engine/match'
 import type { Profile } from '@/engine/types'
 import { useDataStore } from './data'
@@ -22,8 +22,9 @@ export const useMatchStore = defineStore('match', () => {
     if (!d || !exam || !catalog) return []
     // 先深拷贝成普通对象,避免匹配时对响应式代理做上万次读取
     const profile = JSON.parse(JSON.stringify(profileStore.profile)) as Profile
-    const ctx = { profile, exam, catalog, majorRules: d.majorRules }
-    return d.positions.map((pos) => ({ pos, result: matchPosition(pos, ctx), province: provinceOf(pos.location) }))
+    const ctx = { profile, exam, catalog, majorRules: d.majorRules, catRefs: d.catRefs }
+    const kind = exam.kind
+    return d.positions.map((pos) => ({ pos, result: matchPosition(pos, ctx), province: regionOf(pos.location, kind) }))
   })
 
   const summary = computed(() => summarize(rows.value))

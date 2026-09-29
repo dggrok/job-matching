@@ -119,7 +119,7 @@ function goResults() {
             <el-radio-button value="reserved">择业期内未就业的往届生</el-radio-button>
           </el-radio-group>
           <div class="muted hint">
-            约三分之二的国考职位限应届毕业生。择业期(毕业后两年)内未落实工作、档案户口仍在学校或人才机构的往届生,可按应届对待,但限「{{ gradYear }}届」的职位不适用。
+            许多职位限应届毕业生(国考约三分之二)。择业期(毕业后两年)内未落实工作、档案户口仍在学校或人才机构的往届生,可按应届对待,但限「{{ gradYear }}届」的职位不适用。
           </div>
         </el-form-item>
         <el-form-item label="出生年月" required>

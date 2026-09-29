@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import StatusTag from '@/components/StatusTag.vue'
-import { POLITICAL_LABEL, provinceOf, type Row } from '@/engine/filters'
+import { POLITICAL_LABEL, regionOf, type Row } from '@/engine/filters'
 import { matchPosition } from '@/engine/match'
 import type { Profile } from '@/engine/types'
 import { useDataStore } from '@/stores/data'
@@ -18,12 +18,12 @@ const rows = computed<Row[]>(() => {
   const d = data.examData
   if (!d || !data.exam || !data.catalog) return []
   const profile = JSON.parse(JSON.stringify(profileStore.profile)) as Profile
-  const ctx = { profile, exam: data.exam, catalog: data.catalog, majorRules: d.majorRules }
+  const ctx = { profile, exam: data.exam, catalog: data.catalog, majorRules: d.majorRules, catRefs: d.catRefs }
   const byId = new Map(d.positions.map((p) => [p.id, p]))
   return favs.ids
     .map((id) => byId.get(id))
     .filter((p): p is NonNullable<typeof p> => !!p)
-    .map((pos) => ({ pos, result: matchPosition(pos, ctx), province: provinceOf(pos.location) }))
+    .map((pos) => ({ pos, result: matchPosition(pos, ctx), province: regionOf(pos.location, data.exam?.kind) }))
 })
 
 /** 收藏了但不属于当前考试年度的职位数,提示用户切换年度查看。 */

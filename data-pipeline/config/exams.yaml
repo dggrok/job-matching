@@ -9,6 +9,7 @@
 #   例:Y=2025, M=10, maxAge=38 → 最早 1986-10;minAge=18 → 最晚 2007-10。
 
 guokao-2026:
+  kind: guokao                # 国考(界面按 kind 区分展示口径)
   name: 中央机关及其直属机构2026年度考试录用公务员
   type: guokao
   year: 2026                  # 年度(应届毕业生届别)
@@ -35,6 +36,7 @@ guokao-2026:
 # 2027 年度:预计 2026-10-14 发布,发布后取得职位表放入 raw/guokao-2027.xls,
 # 再按公告核对以下所有字段(尤其是 ageRule、official、signup、writtenExam),然后取消 pending。
 guokao-2027:
+  kind: guokao
   name: 中央机关及其直属机构2027年度考试录用公务员
   type: guokao
   year: 2027
@@ -58,3 +60,162 @@ guokao-2027:
     policeMaxAge: 30
     policeMaxAgeFreshPg: 35
     note: 占位,沿用2026年度口径,请以2027年度公告为准。
+
+
+# =====================================================================
+# 省考(二期)。省考各省自行命题,职位表格式、年龄/学历/户籍规则各不相同:
+# 每个省一个导入器(src/importers)+ 一个构建函数(src/normalize),公告级规则写在这里。
+# 每年公告发布后,除了换掉 raw 里的文件,还必须逐条核对本节的 ageRule、notices、codeGroups。
+# =====================================================================
+
+# ---------------- 浙江 ----------------
+# 官方入口:浙江省公务员考试录用网 http://gwy.zjks.gov.cn/ 首页「招考公告」→「浙江省各级机关单位20XX年度考试录用公务员公告」,
+# 公告正文末尾的附件《20XX年浙江省各级机关单位公务员招考计划一览表》(xlsx),下载后保存为 raw/zhejiang-20XX.xlsx。
+zhejiang-2026:
+  kind: shengkao
+  province: 浙江
+  name: 浙江省各级机关单位2026年度考试录用公务员
+  type: zhejiang
+  year: 2026
+  graduateYear: 2026
+  file: raw/zhejiang-2026.xlsx
+  pgClassSuffixExact: true    # 研究生「××类」即一级学科名(法学类=法学),命中时不降级为待确认
+  publishedAt: 2025-11-03
+  signup: 2025-11-06 至 2025-11-11
+  writtenExam: 2025-12-07
+  source: http://gwy.zjks.gov.cn/
+  sample: true                # 2026 年度(去年)数据,2027 年度公告发布后替换
+  official:                   # 公告披露 5712 名(含山区海岛县专项招录预留 318 名),与职位表合计口径不同,不做等值校验
+    positions: null
+    headcount: null
+  ageRule:
+    refYear: 2025             # 公告:年龄18至38周岁(1986年11月至2007年11月期间出生)
+    refMonth: 11
+    minAge: 18
+    maxAge: 38
+    maxAgeFreshPg: 43         # 2026年硕士以上应届毕业生放宽至43周岁(1981年11月起)
+    policeMaxAge: 30          # 警察类职位 30 周岁、应届硕博 35 周岁;职位表逐条写明,以职位年龄为准
+    policeMaxAgeFreshPg: 35
+    note: 公告:年龄18至38周岁(1986年11月至2007年11月期间出生),2026年硕士以上应届毕业生放宽至43周岁(1981年11月起)。法院、检察院、公安、司法行政系统人民警察职位一般为30周岁以下(应届硕博35周岁),团委职位28周岁以下,乡镇专职人武干部30周岁以下,优秀村干部现任村“两委”正职43周岁以下;各职位以职位表「年龄要求」为准。
+  notices:
+    - 本表为公告附件《招考计划一览表》中的职位,合计约 5262 人;公告披露全省计划 5712 名(含山区海岛县专项招录预留计划 318 名),口径不同,未收录的职位请到浙江省公务员考试录用网和各市党建/人才网站查询。
+    - 报考市以下机关时,其他职位的招考范围和对象(如户籍、生源)由各地公告明确,系统无法覆盖,请核对所在市的公告。
+    - 「所在地」由招录单位名称推断,个别单位可能显示为空。
+
+zhejiang-2027:
+  kind: shengkao
+  province: 浙江
+  name: 浙江省各级机关单位2027年度考试录用公务员
+  type: zhejiang
+  year: 2027
+  graduateYear: 2027
+  file: raw/zhejiang-2027.xlsx
+  pgClassSuffixExact: true
+  publishedAt: null
+  signup: null
+  writtenExam: null
+  source: http://gwy.zjks.gov.cn/
+  pending: true               # 预计 2026 年 11 月初发布(上一年度为 2025-11-03)
+  official:
+    positions: null
+    headcount: null
+  ageRule:
+    # 占位,沿用 2026 年度口径;公告发布后必须按公告改 refYear/refMonth 等,并核对 notices
+    refYear: 2026
+    refMonth: 11
+    minAge: 18
+    maxAge: 38
+    maxAgeFreshPg: 43
+    policeMaxAge: 30
+    policeMaxAgeFreshPg: 35
+    note: 占位,沿用2026年度口径,请以2027年度公告为准。
+  notices: []
+
+# ---------------- 江苏 ----------------
+# 官方入口:江苏省人力资源和社会保障厅「人事考试网」公务员专栏 https://jshrss.jiangsu.gov.cn/col/col57253/ →「江苏省20XX年度考试录用公务员专题」;
+# 同一批文件也发布在中共江苏省委组织部网站 https://www.jszzb.gov.cn/ 的「通知公告」里,该站的公告页含《职位简介表》压缩包(zip)和《专业参考目录》(doc)。
+# 压缩包解压后的全部 xls 放进 raw/jiangsu-20XX/ 目录;《专业参考目录》另存为纯文本放到 catalogs/source/jiangsu-20XX-major-ref.txt。
+jiangsu-2026:
+  kind: shengkao
+  province: 江苏
+  name: 江苏省2026年度考试录用公务员
+  type: jiangsu
+  year: 2026
+  graduateYear: 2026
+  file: raw/jiangsu-2026       # 目录:16 份 xls(省级机关、13 个设区市、统计系统、监狱戒毒系统)
+  majorRef: catalogs/source/jiangsu-2026-major-ref.txt
+  publishedAt: 2025-10-31
+  signup: 2025-11-04 至 2025-11-10
+  writtenExam: 2025-12-07
+  source: https://jshrss.jiangsu.gov.cn/col/col92911/index.html
+  sample: true
+  official:
+    positions: null            # 公告只披露招录计划 8179 人
+    headcount: 8179
+  ageRule:
+    refYear: 2025             # 公告:18周岁以上、38周岁以下(1986年11月至2007年11月期间出生)
+    refMonth: 11
+    minAge: 18
+    maxAge: 38
+    maxAgeFreshPg: 43         # 具有硕士及以上学位的2026年应届毕业研究生放宽到43周岁(1981年11月以后出生)
+    policeMaxAge: 38          # 公安、司法行政警察及法警按专门通知执行,系统不区分,由 ageSpecial 提示
+    policeMaxAgeFreshPg: 43
+    note: 公告:18周岁以上、38周岁以下(1986年11月至2007年11月期间出生);普通高校硕士及以上学位的2026年应届毕业研究生、面向优秀村(社区)党组织书记(主任)招录职位的报考者放宽到43周岁以下(1981年11月以后出生);公安、司法行政机关人民警察及法院、检察院司法警察职位按《关于调整公安机关和监狱及劳动教养管理机关录用人民警察招考年龄的通知》执行。
+  # 职位代码(两位)分组含义,取自公告「考录对象及有关要求」;每年公告都要核对范围和文字
+  codeGroups:
+    - range: [50, 59]
+      label: 专技类特殊职位
+      note: 专技类特殊职位(代码50-59)还须符合《公安机关公务员(人民警察)简章》的相关条件
+    - range: [60, 69]
+      label: 面向应届毕业生职位
+      freshAlt: 除2026年普通高校应届毕业生外,还包括报名前服务期满2年内的西部计划/三支一扶/志愿服务乡村振兴计划志愿者、2024年9月后取得境外学位的留学回国人员、当年入伍并于2024年9月后退役的军人
+      residency: 应届类职位:具有研究生学历并取得相应学位者不受生源地限制,其他报考者须为江苏生源
+    - range: [70, 74]
+      label: 法官助理职位
+      note: 法官助理职位还须符合《法官助理、检察官助理简章》规定的条件
+    - range: [75, 79]
+      label: 检察官助理职位
+      note: 检察官助理职位还须符合《法官助理、检察官助理简章》规定的条件
+    - range: [80, 81]
+      label: 面向残疾人职位
+      identity: 限持有第二代《残疾人证》且符合职位要求的残疾类别、等级的人员
+    - range: [90, 96]
+      label: 面向服务基层项目人员职位
+      projects: [village, west, sanzhi, rural, veteran, soldier]
+    - range: [98, 98]
+      label: 面向优秀村(社区)党组织书记(主任)职位
+      identity: 限在本县(市、区)村(社区)工作满5年、任职2年以上且表现优秀的现任村(社区)党组织书记(主任)等,具体标准由各设区市制定
+  notices:
+    - 设区市以下机关职位的生源地/户籍要求由各设区市在招考简章中公布(公告附件1),不在职位表里;系统只能识别职位表「其它」列写明的户籍限制,请务必核对所在市的简章。
+    - 公安、司法行政机关人民警察和法院、检察院司法警察职位的年龄按专门通知执行(通常更严),这类职位的年龄结果最多显示为「待确认」。
+    - 专业按《江苏省专业参考目录》的专业大类展开,并映射到国家专业目录;不在目录内的专业(自考、成教、境外院校等),招录机关可另行审核。
+    - 系统未处理视力、体能、值夜班等体检和岗位要求,请阅读「其它」原文。
+
+jiangsu-2027:
+  kind: shengkao
+  province: 江苏
+  name: 江苏省2027年度考试录用公务员
+  type: jiangsu
+  year: 2027
+  graduateYear: 2027
+  file: raw/jiangsu-2027
+  majorRef: catalogs/source/jiangsu-2027-major-ref.txt
+  publishedAt: null
+  signup: null
+  writtenExam: null
+  source: https://jshrss.jiangsu.gov.cn/col/col57253/
+  pending: true               # 预计 2026 年 10 月底发布(上一年度为 2025-10-31);2027 年度专业参考目录已在省委组织部网站征求意见
+  official:
+    positions: null
+    headcount: null
+  ageRule:
+    refYear: 2026
+    refMonth: 11
+    minAge: 18
+    maxAge: 38
+    maxAgeFreshPg: 43
+    policeMaxAge: 38
+    policeMaxAgeFreshPg: 43
+    note: 占位,沿用2026年度口径,请以2027年度公告为准。
+  codeGroups: []
+  notices: []

@@ -37,6 +37,16 @@ const paged = computed(() => filtered.value.slice((page.value - 1) * pageSize.va
 const filteredHeadcount = computed(() => filtered.value.reduce((s, r) => s + r.pos.headcount, 0))
 
 watch([filters, sortKey, pageSize], () => (page.value = 1), { deep: true })
+// 切换考试后,上一个考试里选中的地区、机构层级等选项在新数据里不一定存在,需清空以免结果被误滤空
+watch(
+  () => data.examId,
+  () => {
+    filters.provinces = []
+    filters.sheets = []
+    filters.orgLevels = []
+    filters.attrs = []
+  },
+)
 
 function options(pick: (r: Row) => string): { value: string; count: number }[] {
   const m = new Map<string, number>()
@@ -47,6 +57,17 @@ function options(pick: (r: Row) => string): { value: string; count: number }[] {
   }
   return [...m.entries()].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count)
 }
+const isShengkao = computed(() => data.exam?.kind === 'shengkao')
+const examLabel = computed(() => {
+  const e = data.exam
+  if (!e) return ''
+  return isShengkao.value ? `${e.year} 年度${e.province ?? ''}省考` : `${e.year} 年度国考`
+})
+const sampleHint = computed(() =>
+  isShengkao.value
+    ? '新一年度职位表发布后,按 README 的流程替换原始文件并重新构建即可切换。年龄、应届届别、户籍生源等条件请以当年公告为准。'
+    : '2027 年度职位表预计 2026-10-14 发布,发布后导入数据管线即可切换。年龄、应届届别等条件请以当年公告为准。',
+)
 const provinceOptions = computed(() => options((r) => r.province))
 const sheetOptions = computed(() => options((r) => r.pos.sheet))
 const levelOptions = computed(() => options((r) => r.pos.orgLevel))
@@ -121,9 +142,23 @@ function statHeadcount(k: Status) {
       show-icon
       :closable="false"
       class="notice"
-      title="当前使用的是 2026 年度国考职位表(开发样本)"
-      description="2027 年度职位表预计 2026-10-14 发布,发布后导入数据管线即可切换。年龄、应届届别等条件请以当年公告为准。"
+      :title="`当前使用的是 ${examLabel} 职位表(样本数据)`"
+      :description="sampleHint"
     />
+    <el-alert
+      v-if="data.exam?.notices?.length"
+      type="warning"
+      show-icon
+      :closable="false"
+      class="notice"
+      title="本考试的重要提示"
+    >
+      <template #default>
+        <ul class="notice-list">
+          <li v-for="(t, i) in data.exam.notices" :key="i">{{ t }}</li>
+        </ul>
+      </template>
+    </el-alert>
     <el-alert v-if="profileStore.missing.length" type="warning" show-icon :closable="false" class="notice">
       <template #title>
         还缺少「{{ profileStore.missing.join('、') }}」,结果不够准确。
@@ -137,7 +172,7 @@ function statHeadcount(k: Status) {
         <div class="eyebrow">匹配结果</div>
         <h1 class="page-title">你可以报考的岗位</h1>
         <p class="muted">
-          {{ data.exam?.year }} 年度国考 · 共 {{ rows.length }} 个职位,已按「我的条件」逐条比对。点击右侧数字可显示或隐藏对应状态。
+          {{ examLabel }} · 共 {{ rows.length }} 个职位,已按「我的条件」逐条比对。点击右侧数字可显示或隐藏对应状态。
         </p>
       </div>
       <div class="stats">
@@ -168,7 +203,7 @@ function statHeadcount(k: Status) {
           collapse-tags-tooltip
           clearable
           filterable
-          placeholder="工作省份"
+          :placeholder="isShengkao ? '所在地市' : '工作省份'"
           class="sel"
         >
           <el-option v-for="o in provinceOptions" :key="o.value" :value="o.value" :label="`${o.value}(${o.count})`" />
@@ -190,7 +225,7 @@ function statHeadcount(k: Status) {
       <el-collapse-transition>
         <div v-show="showMore" class="bar-more">
           <label>
-            <span>机关类别</span>
+            <span>{{ isShengkao ? '职位表分类' : '机关类别' }}</span>
             <el-select v-model="filters.sheets" multiple collapse-tags collapse-tags-tooltip clearable placeholder="不限">
               <el-option v-for="o in sheetOptions" :key="o.value" :value="o.value" :label="`${o.value}(${o.count})`" />
             </el-select>
@@ -301,6 +336,12 @@ function statHeadcount(k: Status) {
 </template>
 
 <style scoped>
+.notice-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  line-height: 1.8;
+}
+
 .notice {
   margin-bottom: 12px;
 }

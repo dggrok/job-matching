@@ -19,6 +19,10 @@ export const PROJECT_LABELS: Record<string, string> = {
   sanzhi: '“三支一扶”计划',
   west: '大学生志愿服务西部计划',
   veteran: '在军队服役5年(含)以上的高校毕业生退役士兵',
+  // 以下三项仅省考职位使用
+  shanhai: '大学生志愿服务山区、海岛、边远地区计划(浙江)',
+  rural: '“志愿服务乡村振兴计划”(含原“苏北计划”,江苏)',
+  soldier: '安排工作的退役军士和义务兵',
 }
 
 export interface MatchContext {
@@ -26,6 +30,8 @@ export interface MatchContext {
   exam: ExamMeta
   catalog: Catalog
   majorRules: Record<string, MajorRule>
+  /** 专业大类 → 国家目录节点 id(江苏) */
+  catRefs?: Record<string, string[]>
 }
 
 const EDU_ORDER = ['大专', '本科', '硕士', '博士'] as const
@@ -124,7 +130,7 @@ export function matchPosition(pos: Position, ctx: MatchContext): MatchResult {
   // ---- 专业 ----
   const rule = ctx.majorRules[pos.majorId]
   if (rule) {
-    const v = matchMajor(rule, pos, profile, catalog)
+    const v = matchMajor(rule, pos, profile, catalog, ctx.catRefs)
     add(v.level, '专业', v.text)
   } else {
     add('warn', '专业', '缺少专业规则,请核对')
@@ -162,6 +168,15 @@ export function matchPosition(pos: Position, ctx: MatchContext): MatchResult {
     add('warn', '学历阶段', '备注要求各学历阶段均取得相应学历和学位,请确认本科阶段也满足')
   }
 
+  // ---- 省考:仅对研究生学历报考者有效的「本科阶段」要求 ----
+  if (userLevel(profile) === 'PG') {
+    for (const t of pos.rr.ugStage ?? []) add('warn', '本科阶段', `${t},请确认你的本科阶段也满足`)
+  }
+
+  // ---- 省考:特定身份限制、需人工核对的其他条件 ----
+  for (const t of pos.rr.identity ?? []) add('warn', '特定身份', `${t},请核对你是否符合`)
+  for (const t of pos.rr.notes ?? []) add('warn', '其他条件', `${t},请自行核对`)
+
   return { status: aggregate(reasons), reasons }
 }
 
@@ -184,6 +199,8 @@ function matchGrassroots(pos: Position, profile: Profile, add: Add): void {
     } else if (need > 0 && profile.grassrootsYears >= need) {
       // 口径:项目限定与年限是否可以互相替代,以招考简章和报考指南为准
       add('warn', '基层经历', `职位限定服务基层项目(${names}),你有 ${profile.grassrootsYears} 年基层工作经历但未选择所列项目,请核对报考指南`)
+    } else if (pos.rr.altIdentity) {
+      add('warn', '基层经历', `限服务基层项目人员(${names})或${pos.rr.altIdentity},请核对你是否属于其中之一`)
     } else {
       add('fail', '基层经历', `限服务基层项目人员(${names}),你不具备`)
     }
@@ -208,9 +225,11 @@ function matchFresh(pos: Position, profile: Profile, exam: ExamMeta, add: Add): 
   if (profile.freshStatus === 'unknown') {
     add('warn', '应届/往届', `${label},你尚未填写应届状态`)
   } else if (profile.freshStatus === 'none') {
-    add('fail', '应届/往届', `${label},你不是应届毕业生`)
+    if (pos.rr.freshAlt) add('warn', '应届/往届', `${label};另外开放给:${pos.rr.freshAlt}。你不是应届毕业生,请核对是否属于所列人员`)
+    else add('fail', '应届/往届', `${label},你不是应届毕业生`)
   } else if (profile.freshStatus === 'reserved') {
-    if (year) add('fail', '应届/往届', `${label},往届生不符合`)
+    if (pos.rr.freshAlt) add('warn', '应届/往届', `${label};另外开放给:${pos.rr.freshAlt}。往届生请核对是否属于所列人员`)
+    else if (year) add('fail', '应届/往届', `${label},往届生不符合`)
     else add('warn', '应届/往届', `${label};择业期内未就业的往届生可按应届对待,需满足户口档案要求,请核对`)
   } else if (year && year !== exam.graduateYear) {
     add('warn', '应届/往届', `${label},与本年度应届届别(${exam.graduateYear})不一致,请核对`)
@@ -234,9 +253,10 @@ function matchAge(pos: Position, profile: Profile, exam: ExamMeta, add: Add): vo
   const b = ageBounds(rule, pos, freshPg)
   const desc = `要求 ${formatYm(b.oldest)} 至 ${formatYm(b.youngest)} 期间出生`
   if (profile.birth > b.youngest) {
-    add('fail', '年龄', `${desc},你未满 ${rule.minAge} 周岁`)
+    add('fail', '年龄', `${desc},你未满 ${b.minAge} 周岁`)
   } else if (profile.birth >= b.oldest) {
-    add('pass', '年龄', desc)
+    if (pos.rr.ageSpecial) add('warn', '年龄', `${desc};该职位年龄按专门规定执行(如公安、司法警察),请以招考简章为准`)
+    else add('pass', '年龄', desc)
   } else if (b.relaxedOldest && profile.birth >= b.relaxedOldest) {
     add('warn', '年龄', `${desc};备注称特定条件下可放宽到 ${formatYm(b.relaxedOldest)} 以后出生,请核对是否符合`)
   } else {

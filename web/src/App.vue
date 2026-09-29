@@ -20,8 +20,8 @@ async function onExamChange(id: string) {
 }
 
 /** 下拉里的考试短名称,避免整句机关名称撑宽顶栏。 */
-function shortName(e: { name: string; year: number; type: string; sample?: boolean }) {
-  const base = e.type === 'guokao' ? `${e.year} 年度国考` : e.name
+function shortName(e: { name: string; year: number; kind?: string; province?: string | null; sample?: boolean }) {
+  const base = e.kind === 'shengkao' ? `${e.year} 年度${e.province ?? ''}省考` : `${e.year} 年度国考`
   return e.sample ? `${base}(样本)` : base
 }
 </script>

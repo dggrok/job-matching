@@ -36,10 +36,16 @@ const pending = computed(() => data.exams.filter((e) => e.pending))
         :closable="false"
         style="margin-top: 12px"
         title="这是开发样本"
-        description="2026 年度职位表用于开发和验证。2027 年度职位表发布后,按 README 的流程导入并核对当年公告,数据才能用于实际报名决策。"
+        :description="`${exam.year} 年度职位表用于开发和验证。新一年度职位表发布后,按 README 的流程导入并核对当年公告,数据才能用于实际报名决策。`"
       />
+      <div v-if="exam.notices?.length" style="margin-top: 12px">
+        <div class="section-title" style="font-size: 14px">本考试的说明</div>
+        <ul class="limits">
+          <li v-for="(t, i) in exam.notices" :key="i">{{ t }}</li>
+        </ul>
+      </div>
       <div v-for="e in pending" :key="e.id" class="muted" style="margin-top: 10px">
-        {{ e.name }}:尚未发布(预计 2026-10-14),官方入口
+        {{ e.name }}:尚未发布{{ e.kind === 'guokao' ? '(预计 2026-10-14)' : '' }},官方入口
         <a :href="e.source" target="_blank" rel="noopener">{{ e.source }}</a>
       </div>
     </el-card>
@@ -60,7 +66,9 @@ const pending = computed(() => data.exams.filter((e) => e.pending))
         <li>招录机关自定义的专业大类(如「财会审计类」)按名称推断映射,同样标为待确认。</li>
         <li>「基层工作年限」与「服务基层项目」两个字段的互相关系,请对照当年《报考指南》核实。</li>
         <li>年龄按公告的出生年月区间判断。公安民警职位使用更严的年龄线;监狱、戒毒警察等特殊职位若备注未写明,可能与实际口径有差异。</li>
-        <li>目前只覆盖国考,省考(浙江、江苏)在二期。</li>
+        <li>省考(浙江、江苏):设区市及以下的户籍、生源要求、公安类职位的专门年龄规定,部分写在各市公告或简章里,不在职位表中,一律标为待确认,请阅读所在市的公告。</li>
+        <li>省考职位表里的研究生专业常写到二级学科(如「会计学」「民商法学」),不在 2022 版目录中,只能标为待确认。</li>
+        <li>英语等级、特殊证明材料、法官助理等另有简章的条件会原样列出并标为待确认。</li>
       </ol>
     </el-card>
 

@@ -6,6 +6,16 @@ export function provinceOf(location: string): string {
   return m ? m[1] : location || '未标注'
 }
 
+/**
+ * 筛选用的「地区」:国考取省级名称;省考取地级市(省级机关保持「省级」),
+ * 如 "南京市玄武区" → "南京市"。
+ */
+export function regionOf(location: string, kind?: string): string {
+  if (kind !== 'shengkao') return provinceOf(location)
+  const m = location.match(/^(.+?市)/)
+  return m ? m[1] : location || '未标注'
+}
+
 export interface Filters {
   keyword: string
   provinces: string[]

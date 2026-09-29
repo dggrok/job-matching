@@ -8,6 +8,8 @@ export interface AgeBounds {
   youngest: string
   /** 备注里写"放宽到 N 周岁"对应的最早出生年月(需满足特定条件,待确认) */
   relaxedOldest?: string
+  /** 该职位的最低年龄(周岁) */
+  minAge: number
 }
 
 export function ym(year: number, month: number): string {
@@ -22,11 +24,17 @@ export function ym(year: number, month: number): string {
  *
  * - 应届硕士、博士研究生(freshPg)使用放宽后的上限;
  * - 市(地)级及以下公安民警职位(pos.police)使用更严的上限;
- * - 备注里写明的更严上限(rr.maxAge)优先。
+ * - 备注里写明的更严上限(rr.maxAge)优先;
+ * - 省考的职位自带年龄线(ageMin/ageMax/ageMaxFresh)时直接使用,不再看 police 标记。
  */
 export function ageBounds(rule: AgeRule, pos: Position, freshPg: boolean): AgeBounds {
   let max = pos.police ? rule.policeMaxAge : rule.maxAge
   let maxFresh = pos.police ? rule.policeMaxAgeFreshPg : rule.maxAgeFreshPg
+  if (pos.ageMax) {
+    max = pos.ageMax
+    maxFresh = pos.ageMaxFresh ?? pos.ageMax
+  }
+  const minAge = pos.ageMin ?? rule.minAge
   const remarkMax = pos.rr.maxAge
   if (remarkMax) {
     max = Math.min(max, remarkMax)
@@ -35,7 +43,8 @@ export function ageBounds(rule: AgeRule, pos: Position, freshPg: boolean): AgeBo
   const limit = freshPg ? maxFresh : max
   const bounds: AgeBounds = {
     oldest: ym(rule.refYear - limit - 1, rule.refMonth),
-    youngest: ym(rule.refYear - rule.minAge, rule.refMonth),
+    youngest: ym(rule.refYear - minAge, rule.refMonth),
+    minAge,
   }
   if (pos.rr.ageRelaxedTo) {
     bounds.relaxedOldest = ym(rule.refYear - pos.rr.ageRelaxedTo - 1, rule.refMonth)

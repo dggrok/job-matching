@@ -29,6 +29,7 @@ export function matchMajor(
   pos: Position,
   profile: Profile,
   catalog: Catalog,
+  catRefs?: Record<string, string[]>,
 ): MajorVerdict {
   if (rule.unlimited) return { level: 'pass', text: '专业不限' }
 
@@ -82,7 +83,9 @@ export function matchMajor(
         }
         continue
       }
-      if (!t.refs.some((r) => chainSet.has(r))) continue
+      // 江苏的专业大类:节点集合放在 catRefs 里统一存放,规则里只有引用
+      const refs = t.cat ? (catRefs?.[t.cat] ?? []) : t.refs
+      if (!refs.some((r) => chainSet.has(r))) continue
       const verdict = evaluateHit(t, chainSet)
       if (verdict === 'excluded') {
         excludedName = t.name

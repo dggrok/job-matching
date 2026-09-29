@@ -79,6 +79,9 @@ const projects = computed(() => (pos.value?.projects ?? []).map((p) => PROJECT_L
         <el-descriptions-item label="专业要求(原文)" :span="2"><div class="pre-wrap">{{ majorText }}</div></el-descriptions-item>
         <el-descriptions-item label="职位简介" :span="2">{{ pos.intro || '—' }}</el-descriptions-item>
         <el-descriptions-item label="备注(原文)" :span="2"><div class="pre-wrap">{{ pos.remark || '—' }}</div></el-descriptions-item>
+        <el-descriptions-item v-for="(x, i) in pos.extras ?? []" :key="'x' + i" :label="x[0]" :span="2">
+          <div class="pre-wrap">{{ x[1] }}</div>
+        </el-descriptions-item>
         <el-descriptions-item label="咨询电话" :span="2">{{ pos.phones.join(' / ') || '—' }}</el-descriptions-item>
         <el-descriptions-item label="部门网站" :span="2">
           <a v-if="pos.site && pos.site !== '无'" :href="pos.site.startsWith('http') ? pos.site : 'http://' + pos.site" target="_blank" rel="noopener">{{ pos.site }}</a>

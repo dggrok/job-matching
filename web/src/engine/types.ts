@@ -25,6 +25,8 @@ export interface MajorToken {
   resolved: boolean
   qualifiers: Qualifier[]
   likelyLevel?: 'UG' | 'PG'
+  /** 江苏等省的自定义「专业大类」引用:实际的目录节点集合在 ExamData.catRefs 里 */
+  cat?: string
 }
 
 export interface MajorSegment {
@@ -54,6 +56,19 @@ export interface RemarkRules {
   minServiceYears?: number
   majorAnyLevel?: boolean
   needAllStageDegrees?: boolean
+  // ---- 以下字段主要用于省考 ----
+  /** 需要人工核对的其他硬条件原句(英语要求、特殊证明材料等),一律待确认 */
+  notes?: string[]
+  /** 特定身份限制(优秀村干部、退役军人、残疾人、少数民族等),系统无法判断,一律待确认 */
+  identity?: string[]
+  /** 仅对以研究生学历报考者有效的「本科阶段」要求 */
+  ugStage?: string[]
+  /** 应届类职位同时开放给哪些非应届人员(不满足应届时不判不符合,改为待确认) */
+  freshAlt?: string
+  /** 服务基层项目之外还允许的其他身份(如乡镇事业编制人员),没有所列项目时不判不符合 */
+  altIdentity?: string
+  /** 年龄按专门规定执行(公安、司法警察等),公告级年龄线只能作参考:通过时也只显示待确认 */
+  ageSpecial?: boolean
 }
 
 export interface Position {
@@ -87,6 +102,12 @@ export interface Position {
   phones: string[]
   sheet: string
   police?: boolean
+  /** 该职位自己的年龄线(周岁);省考每个职位的年龄上限可能不同,缺省时用考试的公告级 ageRule */
+  ageMin?: number
+  ageMax?: number
+  ageMaxFresh?: number
+  /** 详情里额外展示的 [名称, 内容] */
+  extras?: [string, string][]
   warnings?: string[]
 }
 
@@ -105,6 +126,10 @@ export interface ExamMeta {
   id: string
   name: string
   type: string
+  /** guokao | shengkao */
+  kind?: string
+  /** 省考所属省份,如「浙江」 */
+  province?: string | null
   year: number
   graduateYear: number
   publishedAt?: string
@@ -116,6 +141,8 @@ export interface ExamMeta {
   positions?: number
   headcount?: number
   ageRule?: AgeRule
+  /** 考试级提示(构建期写入,如「设区市户籍要求不在职位表内」) */
+  notices?: string[]
   dataVersion?: string
   file: string | null
 }
@@ -128,6 +155,8 @@ export interface Manifest {
 export interface ExamData {
   examId: string
   majorRules: Record<string, MajorRule>
+  /** 专业大类名 → 国家目录节点 id 集合(江苏) */
+  catRefs?: Record<string, string[]>
   positions: Position[]
 }
 
